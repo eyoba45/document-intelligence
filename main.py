@@ -1,18 +1,17 @@
-from app.core.llm import ask
 from app.core.document import read_document
-from app.prompts.system import document_prompt
+from app.core.chunker import chunk_text
 
 # Read the document
-document = read_document("documents/sample.txt")
+document = read_document("documents/test.pdf")
+print(f"Document loaded: {len(document)} characters")
 
-# Create a system prompt that includes the document
-system = document_prompt(document)
+# Chunk it
+chunks = chunk_text(document)
+print(f"Split into: {len(chunks)} chunks")
+print("---")
 
-# Ask questions about the document
-print(ask("When was ASTU established?", system))
-print("---")
-print(ask("How many students are enrolled?", system))
-print("---")
-print(ask("What is the size of the main campus?", system))
-print("---")
-print(ask("Who is the president of the United States?", system))
+# Show the first 3 chunks
+for i, chunk in enumerate(chunks[:3]):
+    print(f"Chunk {i+1}:")
+    print(chunk)
+    print("---")
