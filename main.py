@@ -1,4 +1,7 @@
 from app.core.llm import ask
 
-response = ask("What is a PDF document and how is it structured?")
-print(response)
+print(ask("My name is DOC-INT and I am a document intelligence agent."))
+print("---")
+print(ask("What is my name?"))
+print("---")
+print(ask("What am I tasked with?"))
