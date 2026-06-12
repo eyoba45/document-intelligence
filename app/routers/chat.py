@@ -10,7 +10,7 @@ router = APIRouter()
 class QuestionRequest(BaseModel):
     question: str
 
-@router.post("/chat")
+@router.post("/api/chat")
 async def chat(request: QuestionRequest):
     if not app_state.document_loaded or app_state.current_collection is None:
         raise HTTPException(
