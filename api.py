@@ -11,7 +11,7 @@ app = FastAPI(
 # Allow React frontend to talk to the API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000" , "https://document-intelligence-frontend-snowy.vercel.app"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000" ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -22,8 +22,8 @@ app.include_router(upload.router, prefix="/api", tags=["Upload"])
 app.include_router(chat.router, prefix="/api", tags=["Chat"])
 
 @app.get("/")
-def home():
-    return {
-        "message": "Document Intelligence API is running",
-        "docs": "Visit /docs to see all endpoints"
-    }
+if __name__ == "__main__":
+    import uvicorn
+    import os
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("api:app", host="0.0.0.0", port=port)
