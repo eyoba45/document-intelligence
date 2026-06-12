@@ -21,7 +21,7 @@ async def upload_document(file: UploadFile = File(...)):
         shutil.copyfileobj(file.file, buffer)
 
     text = read_document(temp_path)
-    chunks = chunk_text(text)
+    chunks = chunk_text(text, chunk_size=1000, overlap=100)
 
     app_state.current_collection = create_collection(chunks)
     app_state.document_loaded = True

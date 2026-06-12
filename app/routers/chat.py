@@ -18,13 +18,21 @@ async def chat(request: QuestionRequest):
             detail="Please upload a document first"
         )
 
+    # Expand query into multiple variations
     queries = expand_query(request.question)
+
+    # Get more chunks — 8 instead of 3
     relevant_chunks = find_relevant_chunks_expanded(
-        queries, app_state.current_collection, n_results=3
+        queries, app_state.current_collection, n_results=8
     )
 
-    context = "\n\n".join(relevant_chunks)
+    # Build context
+    context = "\n\n---\n\n".join(relevant_chunks)
+
+    # Build prompt
     system = document_prompt(context)
+
+    # Get answer
     response = ask(request.question, system)
 
     return {
