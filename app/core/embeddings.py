@@ -1,28 +1,23 @@
 import chromadb
-from sentence_transformers import SentenceTransformer
+from chromadb.utils import embedding_functions
 
-# Load the embedding model
-# This runs locally on your computer - no API needed
-model = SentenceTransformer("all-MiniLM-L6-v2")
+# Use a much lighter embedding function
+# This uses chromadb's built-in default which is tiny
+ef = embedding_functions.DefaultEmbeddingFunction()
 
-# Create a ChromaDB client - this is your vector database
 client = chromadb.Client()
 
 def create_collection(chunks: list, collection_name: str = "document"):
-    """
-    Take a list of text chunks, convert them to embeddings,
-    and store them in ChromaDB.
-    """
-    # Delete old collection if it exists
     try:
         client.delete_collection(collection_name)
-    except Exception:
+    except:
         pass
 
-    # Create a fresh collection
-    collection = client.create_collection(collection_name)
+    collection = client.create_collection(
+        name=collection_name,
+        embedding_function=ef
+    )
 
-    # Add all chunks to the collection
     collection.add(
         documents=chunks,
         ids=[f"chunk_{i}" for i in range(len(chunks))]
@@ -32,14 +27,19 @@ def create_collection(chunks: list, collection_name: str = "document"):
     return collection
 
 
+def find_relevant_chunks(question: str, collection, n_results: int = 3) -> list:
+    results = collection.query(
+        query_texts=[question],
+        n_results=n_results
+    )
+    return results["documents"][0]
+
+
 def find_relevant_chunks_expanded(
-    questions: list, 
-    collection, 
+    questions: list,
+    collection,
     n_results: int = 3
 ) -> list:
-    """
-    Search using multiple query variations and combine results.
-    """
     all_chunks = []
     seen = set()
 
@@ -49,7 +49,6 @@ def find_relevant_chunks_expanded(
             n_results=n_results
         )
         for chunk in results["documents"][0]:
-            # Avoid duplicates
             if chunk not in seen:
                 seen.add(chunk)
                 all_chunks.append(chunk)
