@@ -8,7 +8,7 @@ import os
 
 router = APIRouter()
 
-@router.post("/upload")
+@router.post("/api/upload")
 async def upload_document(file: UploadFile = File(...)):
     if not file.filename.endswith((".pdf", ".txt")):
         raise HTTPException(
