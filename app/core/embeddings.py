@@ -1,18 +1,16 @@
 import chromadb
 from chromadb.utils import embedding_functions
 
-# Use a much lighter embedding function
-# This uses chromadb's built-in default which is tiny
 ef = embedding_functions.DefaultEmbeddingFunction()
-
 client = chromadb.Client()
 
 def create_collection(chunks: list, collection_name: str = "document"):
-    # Filter out any empty or very short chunks before adding
-    clean_chunks = [c for c in chunks if c and len(c.strip()) > 20]
+    # Clean chunks
+    clean_chunks = [c.strip() for c in chunks if c and len(c.strip()) > 10]
     
+    # Last resort fallback
     if not clean_chunks:
-        raise ValueError("No valid chunks found in document")
+        clean_chunks = ["Document content could not be extracted properly."]
     
     try:
         client.delete_collection(collection_name)
@@ -24,13 +22,19 @@ def create_collection(chunks: list, collection_name: str = "document"):
         embedding_function=ef
     )
 
-    collection.add(
-        documents=clean_chunks,
-        ids=[f"chunk_{i}" for i in range(len(clean_chunks))]
-    )
+    # Add in batches of 100 to avoid memory issues
+    batch_size = 100
+    for i in range(0, len(clean_chunks), batch_size):
+        batch = clean_chunks[i:i + batch_size]
+        batch_ids = [f"chunk_{i + j}" for j in range(len(batch))]
+        collection.add(
+            documents=batch,
+            ids=batch_ids
+        )
 
     print(f"Stored {len(clean_chunks)} chunks in vector database")
     return collection
+
 
 def find_relevant_chunks(question: str, collection, n_results: int = 3) -> list:
     results = collection.query(
@@ -49,13 +53,16 @@ def find_relevant_chunks_expanded(
     seen = set()
 
     for question in questions:
-        results = collection.query(
-            query_texts=[question],
-            n_results=n_results
-        )
-        for chunk in results["documents"][0]:
-            if chunk not in seen:
-                seen.add(chunk)
-                all_chunks.append(chunk)
+        try:
+            results = collection.query(
+                query_texts=[question],
+                n_results=n_results
+            )
+            for chunk in results["documents"][0]:
+                if chunk not in seen:
+                    seen.add(chunk)
+                    all_chunks.append(chunk)
+        except:
+            pass
 
     return all_chunks
